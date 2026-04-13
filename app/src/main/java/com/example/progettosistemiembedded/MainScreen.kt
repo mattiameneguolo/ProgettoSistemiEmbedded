@@ -24,6 +24,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 
+import androidx.compose.foundation.isSystemInDarkTheme
+
+private fun darken(color: Color, factor: Float = 0.85f): Color {
+    return color.copy(
+        red = color.red * factor,
+        green = color.green * factor,
+        blue = color.blue * factor
+    )
+}
+
 data class GridButtonData(
     val char: String,
     val boxColor: Color,
@@ -104,12 +114,15 @@ fun ColorCell(
     textColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val darkTheme = isSystemInDarkTheme()
+    val normalColor = if (darkTheme) darken(boxColor, 0.85f) else boxColor
+
     ElevatedButton(
         onClick = { println("button $char pressed") },
         modifier = modifier.aspectRatio(1.6f),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = boxColor,
+            containerColor = normalColor,
             contentColor = textColor
         )
     ) {
