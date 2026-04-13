@@ -29,7 +29,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("main") {
-                            MainScreen()
+                            MainScreen(onGameEnd = { sequence ->
+                                println("game ended with sequence $sequence")
+                                navController.navigate("results")
+                            })
+                        }
+                        composable("results") {
+                            ResultsScreen()
                         }
                     }
                 }
