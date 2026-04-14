@@ -1,5 +1,6 @@
 package com.example.progettosistemiembedded
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
@@ -7,7 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 
 /**
  * Restituisce una versione più scura del colore passato in input,
@@ -59,7 +60,10 @@ data class GridButtonData(
 )
 
 @Composable
-fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
+fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
+
+    val configuration = LocalConfiguration.current
+    var isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var sequence by rememberSaveable { mutableStateOf(listOf<String>()) }
 
@@ -72,40 +76,73 @@ fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
         GridButtonData("C", Color.Cyan, Color.Black)
     )
 
-    Column(
-        modifier = Modifier
+    ConstraintLayout(
+        modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        val (titleRef, matrixRef, boxRef, actionsRef) = createRefs()
 
         Text(
             text = stringResource(R.string.game_title),
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .constrainAs(titleRef) {
+                    if (isLandscape) {
+                        top.linkTo(parent.top)
+                        start.linkTo(matrixRef.end)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    } else {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    }
+                }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        /* Matrice di tasti per la selezione della sequenza */
         ButtonsMatrix(
             buttons = buttons,
             onButtonClick = { char ->
                 sequence = sequence + char
+            },
+            modifier = Modifier.constrainAs(matrixRef) {
+                if (isLandscape) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start, margin = 16.dp)
+                    end.linkTo(boxRef.start, margin = 16.dp)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints
+                } else {
+                    top.linkTo(titleRef.bottom, margin = 24.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.percent(0.8f)
+                }
             }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        /* Box contenente la sequenza della partita */
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
             modifier = Modifier
-                .fillMaxWidth()
+                .constrainAs(boxRef) {
+                    if (isLandscape) {
+                        start.linkTo(matrixRef.end, margin = 16.dp)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(actionsRef.top, margin = 24.dp)
+                        width = Dimension.fillToConstraints
+                    } else {
+                        top.linkTo(matrixRef.bottom, margin = 24.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(actionsRef.top)
+                        width = Dimension.fillToConstraints
+                    }
+                }
                 .height(100.dp)
         ) {
             Text(
@@ -115,11 +152,22 @@ fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        /* Riga pulsanti cancella e termina il gioco */
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .constrainAs(actionsRef) {
+                    if (isLandscape) {
+                        start.linkTo(boxRef.start)
+                        end.linkTo(boxRef.end)
+                        bottom.linkTo(parent.bottom)
+                        width = Dimension.fillToConstraints
+                    } else {
+                        top.linkTo(boxRef.bottom, margin = 24.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                        width = Dimension.fillToConstraints
+                    }
+                },
             horizontalArrangement = Arrangement.spacedBy(
                 12.dp,
                 Alignment.CenterHorizontally
@@ -127,7 +175,6 @@ fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
         ) {
             Button(
                 onClick = {
-                    println("button pressed")
                     sequence = emptyList()
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -140,9 +187,9 @@ fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
                     fontSize = 18.sp
                 )
             }
+
             Button(
                 onClick = {
-                    println("button pressed")
                     onGameEnd(sequence)
                     sequence = emptyList()
                 },
@@ -161,9 +208,13 @@ fun MainScreen(onGameEnd: (sequence: List<String>) -> Unit) {
 }
 
 @Composable
-fun ButtonsMatrix(buttons: List<GridButtonData>, onButtonClick: (String) -> Unit) {
+fun ButtonsMatrix(
+    buttons: List<GridButtonData>,
+    onButtonClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier.fillMaxWidth(0.8f),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         for (i in 0 until 3) {
