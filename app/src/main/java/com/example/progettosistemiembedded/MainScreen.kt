@@ -63,7 +63,7 @@ data class GridButtonData(
 fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
 
     val configuration = LocalConfiguration.current
-    var isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var sequence by rememberSaveable { mutableStateOf(listOf<String>()) }
 

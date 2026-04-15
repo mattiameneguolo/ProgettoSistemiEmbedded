@@ -2,4 +2,5 @@
 <resources>
     <string name="cancel_game">Cancella Partita</string>
     <string name="end_game">Termina Partita</string>
+    <string name="history_title">📋 Cronologia Partite</string>
 </resources>
