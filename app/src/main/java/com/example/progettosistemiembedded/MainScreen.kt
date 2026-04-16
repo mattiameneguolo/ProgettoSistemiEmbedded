@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 
@@ -53,7 +54,7 @@ private fun darken(color: Color, factor: Float = 0.85f): Color {
 /**
  *
  */
-data class GridButtonData(
+private data class GridButtonData(
     val char: String,
     val boxColor: Color,
     val textColor: Color
@@ -208,7 +209,7 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 }
 
 @Composable
-fun ButtonsMatrix(
+private fun ButtonsMatrix(
     buttons: List<GridButtonData>,
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -245,7 +246,7 @@ fun ButtonsMatrix(
 }
 
 @Composable
-fun ColorCell(
+private fun ColorCell(
     char: String,
     boxColor: Color,
     textColor: Color,
@@ -254,8 +255,7 @@ fun ColorCell(
 ) {
     val darkTheme = isSystemInDarkTheme()
     val normalColor = if (darkTheme) darken(boxColor, 0.85f) else boxColor
-    val configuration = LocalConfiguration.current
-    val buttonAspectRatio = if (configuration.screenHeightDp <= 740) 1.6f else 1f
+    val buttonAspectRatio = if (LocalWindowInfo.current.containerDpSize.height <= 740.dp) 1.6f else 1f
 
     ElevatedButton(
         onClick = {
