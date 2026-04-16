@@ -68,6 +68,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
                 }
                 .verticalScroll(rememberScrollState())
         ) {
+            // TODO: Implementare con LazyRows
             for (game in games.reversed()) {
                 Card(
                     colors = CardDefaults.cardColors(
