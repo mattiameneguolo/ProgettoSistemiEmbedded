@@ -3,14 +3,13 @@ package com.example.progettosistemiembedded
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import android.util.Log
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -33,10 +32,6 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
 
     Log.d(mTAG, "Creating ResultsScreen with list of games: $games")
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val maxSequenceLength: Int = (if (isLandscape) 12 else 8)
-
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
@@ -56,7 +51,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
             }
         )
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .constrainAs(resultsRef) {
                     top.linkTo(titleRef.bottom, margin = 24.dp)
@@ -66,43 +61,53 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
                     width = Dimension.fillToConstraints
                     height = Dimension.fillToConstraints
                 }
-                .verticalScroll(rememberScrollState())
         ) {
-            // TODO: Implementare con LazyRows
-            for (game in games.reversed()) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .height(100.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = game.size.toString(),
-                            fontSize = 24.sp
-                        )
-
-                        Text(
-                            text = game.subList(0, Math.min(game.size, maxSequenceLength))
-                                .joinToString(", ") + (if (game.size > maxSequenceLength) " ..." else ""),
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 16.dp)
-                        )
-                    }
-                }
+            var gameIdx = 0
+            items(items=games.reversed(), key={ gameIdx++ }) { game ->
+                println("Generating ROW with game: $game")
+                ResultRow(game)
             }
         }
     }
+}
 
+@Composable
+private fun ResultRow(
+    game: List<String>
+) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val maxSequenceLength: Int = (if (isLandscape) 12 else 8)
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(100.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = game.size.toString(),
+                fontSize = 24.sp
+            )
+
+            Text(
+                text = game.subList(0, Math.min(game.size, maxSequenceLength))
+                    .joinToString(", ") + (if (game.size > maxSequenceLength) " ..." else ""),
+                fontSize = 24.sp,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
+            )
+        }
+    }
 }
