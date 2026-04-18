@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import android.util.Log
 
 /**
  * Restituisce una versione più scura del colore passato in input,
@@ -63,6 +64,8 @@ private data class GridButtonData(
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
 
+    val mainTAG = "MainScreen:MainScreen"
+
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -76,6 +79,8 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         GridButtonData("Y", Color.Yellow, Color.Black),
         GridButtonData("C", Color.Cyan, Color.Black)
     )
+
+    Log.d(mainTAG, "Creating MainScreen with buttons $buttons and orientation ${if (isLandscape) "landscape" else "portrait"}")
 
     ConstraintLayout(
         modifier = modifier
@@ -107,7 +112,9 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         ButtonsMatrix(
             buttons = buttons,
             onButtonClick = { char ->
+                Log.d(mainTAG, "Button $char pressed, adding to sequence $sequence")
                 sequence = sequence + char
+                Log.d(mainTAG, "Sequence updated: $sequence")
             },
             modifier = Modifier.constrainAs(matrixRef) {
                 if (isLandscape) {
@@ -176,7 +183,9 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         ) {
             Button(
                 onClick = {
+                    Log.d(mainTAG, "Game canceled, resetting sequence $sequence")
                     sequence = emptyList()
+                    Log.d(mainTAG, "Sequence cleared: $sequence")
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -191,8 +200,10 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 
             Button(
                 onClick = {
+                    Log.d(mainTAG, "Game ended with $sequence")
                     onGameEnd(sequence)
                     sequence = emptyList()
+                    Log.d(mainTAG, "Sequence cleared: $sequence")
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -214,6 +225,10 @@ private fun ButtonsMatrix(
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
+    val mtrTAG = "MainScreen:ButtonsMatrix"
+    Log.d(mtrTAG, "Creating ButtonsMatrix with buttons $buttons")
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -253,13 +268,16 @@ private fun ColorCell(
     modifier: Modifier,
     onClick: (String) -> Unit
 ) {
+    val cellTAG = "MainScreen:ColorCell"
+    Log.d(cellTAG, "Creating ColorCell with char -> $char, boxColor -> $boxColor, textColor -> $textColor")
+
     val darkTheme = isSystemInDarkTheme()
     val normalColor = if (darkTheme) darken(boxColor, 0.85f) else boxColor
     val buttonAspectRatio = if (LocalWindowInfo.current.containerDpSize.height <= 740.dp) 1.6f else 1f
 
     ElevatedButton(
         onClick = {
-            println("button $char pressed")
+            Log.d(cellTAG, "Button $char pressed")
             onClick(char)
         },
         modifier = modifier

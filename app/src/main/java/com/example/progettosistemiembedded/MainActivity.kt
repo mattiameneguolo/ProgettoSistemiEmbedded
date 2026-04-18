@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.util.Log
 
 class GameHistory: ViewModel () {
     var games by mutableStateOf<List<List<String>>>(emptyList())
@@ -28,9 +29,14 @@ class GameHistory: ViewModel () {
 }
 
 class MainActivity : ComponentActivity() {
+
+    val mTAG = this::class.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        Log.d(mTAG, "Creating MainActivity view")
 
         setContent {
             SimonGameTheme {
@@ -44,13 +50,15 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("main") {
+                            Log.d(mTAG, "Navigating to main screen")
                             MainScreen(modifier = Modifier, onGameEnd = { sequence ->
-                                println("game ended with sequence $sequence")
+                                Log.d(mTAG, "Game ended with sequence $sequence")
                                 gameHistory.addGame(sequence)
                                 navController.navigate("results")
                             })
                         }
                         composable("results") {
+                            Log.d(mTAG, "Navigating to results screen with games: ${gameHistory.games}")
                             ResultsScreen(modifier = Modifier, gameHistory.games)
                         }
                     }

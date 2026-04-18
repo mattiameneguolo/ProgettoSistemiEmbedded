@@ -25,12 +25,12 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import kotlin.collections.joinToString
 
-const val mTAG = "ResultsScreen"
-
 @Composable
 fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
 
-    Log.d(mTAG, "Creating ResultsScreen with list of games: $games")
+    val resTAG = "ResultsScreen:ResultsScreen"
+
+    Log.d(resTAG, "Creating ResultsScreen with list of games: $games")
 
     ConstraintLayout(
         modifier = modifier
@@ -64,7 +64,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
         ) {
             var gameIdx = 0
             items(items=games.reversed(), key={ gameIdx++ }) { game ->
-                println("Generating ROW with game: $game")
+                Log.d(resTAG, "Generating ROW $gameIdx with game: $game")
                 ResultRow(game)
             }
         }
@@ -75,9 +75,13 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
 private fun ResultRow(
     game: List<String>
 ) {
+    val rowTAG = "ResultsScreen:ResultRow"
+
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val maxSequenceLength: Int = (if (isLandscape) 12 else 8)
+
+    Log.d(rowTAG, "Creating ResultRow with game: $game, sequence length: ${game.size}")
 
     Card(
         colors = CardDefaults.cardColors(
