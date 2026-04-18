@@ -64,7 +64,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
         ) {
             var gameIdx = 0
             items(items=games.reversed(), key={ gameIdx++ }) { game ->
-                Log.d(resTAG, "Generating ROW $gameIdx with game: $game")
+                Log.d(resTAG, "Generating ROW with game: $game")
                 ResultRow(game)
             }
         }
