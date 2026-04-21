@@ -25,6 +25,20 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import kotlin.collections.joinToString
 
+/**
+ * Composable che mostra la schermata dei risultati delle partite giocate.
+ *
+ * La funzione costruisce un layout composto da un titolo nella parte
+ * superiore e da una lista contenente la cronologia delle
+ * partite salvate. Ogni elemento della lista rappresenta una singola
+ * partita e viene visualizzato tramite la composable [ResultRow].
+ *
+ * Le partite vengono mostrate in ordine inverso rispetto a quello
+ * ricevuto in input, così da visualizzare per prime le più recenti..
+ *
+ * @param modifier modificatore opzionale applicato al layout principale
+ * @param games lista delle partite concluse, dove ogni partita è rappresentata come lista di stringhe
+ */
 @Composable
 fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
 
@@ -71,6 +85,21 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<List<String>>) {
     }
 }
 
+/**
+ * Composable che rappresenta una singola riga della schermata dei risultati.
+ *
+ * Ogni riga mostra due informazioni principali relative a una partita:
+ * il numero totale di elementi presenti nella sequenza e una
+ * rappresentazione testuale della sequenza stessa.
+ *
+ * La lunghezza massima della sequenza mostrata viene adattata in base
+ * all'orientamento del dispositivo: in modalità landscape viene
+ * consentita una visualizzazione più estesa, mentre in portrait la
+ * sequenza viene abbreviata prima. Se la partita contiene più elementi
+ * del limite previsto, il testo viene troncato e completato con "...".
+ *
+ * @param game lista di stringhe che rappresenta la sequenza registrata per una partita
+ */
 @Composable
 private fun ResultRow(
     game: List<String>
