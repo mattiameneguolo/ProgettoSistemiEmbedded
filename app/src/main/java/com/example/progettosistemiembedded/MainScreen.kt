@@ -38,11 +38,15 @@ import androidx.constraintlayout.compose.Dimension
 import android.util.Log
 
 /**
- * Restituisce una versione più scura del colore passato in input,
- * applicando un fattore di riduzione ai componenti RGB.
+ * Restituisce una variante più scura del colore passato in input,
+ * abbassandone la luminosità.
  *
- * Viene usata per adattare l'aspetto dei tasti al tema scuro e
- * (TODO) per dare un feedback visivo alla pressione di un pulsante
+ * Viene utilizzata per adattare l'aspetto grafico dei pulsanti
+ * quando il sistema è impostato in tema scuro.
+ *
+ * @param color colore di partenza da scurire
+ * @param factor fattore moltiplicativo applicato ai componenti RGB
+ * @return una nuova istanza di [Color] più scura rispetto all'originale
  */
 private fun darken(color: Color, factor: Float = 0.85f): Color {
     return color.copy(
@@ -53,7 +57,14 @@ private fun darken(color: Color, factor: Float = 0.85f): Color {
 }
 
 /**
+ * Classe privata che rappresenta un pulsante della griglia di gioco.
  *
+ * Ogni elemento contiene il carattere da visualizzare all'interno
+ * del pulsante, il colore di sfondo della cella e il colore del testo.
+ *
+ * @property char carattere mostrato sul pulsante
+ * @property boxColor colore di sfondo del pulsante
+ * @property textColor colore del testo del pulsante
  */
 private data class GridButtonData(
     val char: String,
@@ -61,6 +72,28 @@ private data class GridButtonData(
     val textColor: Color
 )
 
+/**
+ * Composable principale che costruisce la schermata di gioco.
+ *
+ * La funzione gestisce lo stato della sequenza selezionata
+ * dall'utente e organizza i componenti principali dell'interfaccia:
+ * titolo, matrice di pulsanti colorati, area di riepilogo della
+ * sequenza inserita e pulsanti finali di azione.
+ *
+ * Il layout si adatta automaticamente all'orientamento del dispositivo.
+ * In modalità portrait gli elementi vengono disposti verticalmente,
+ * mentre in landscape la schermata viene riorganizzata per sfruttare
+ * meglio lo spazio orizzontale disponibile, posizionando la matrice
+ * di pulsanti a sinistra e titolo, box e pulsanti di conferma a destra.
+ *
+ * Quando l'utente preme il pulsante di conferma, la sequenza corrente
+ * viene inviata tramite la callback [onGameEnd] e successivamente
+ * azzerata, mentra quando preme il pulsante di cancellazione, la
+ * sequenza viene direttamente azzerata.
+ *
+ * @param modifier modificatore opzionale applicato al layout principale
+ * @param onGameEnd callback invocata al termine della partita con la sequenza selezionata
+ */
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
 
@@ -219,6 +252,22 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
     }
 }
 
+/**
+ * Costruisce la matrice dei pulsanti colorati mostrati nella schermata principale.
+ *
+ * La funzione riceve una lista di elementi di tipo [GridButtonData]
+ * e li dispone in una griglia composta da tre righe e due colonne.
+ * Ogni cella della matrice viene rappresentata attraverso la composable
+ * [ColorCell], che gestisce l'aspetto e il comportamento del singolo pulsante.
+ *
+ * La callback [onButtonClick] viene inoltrata a ciascuna cella per
+ * permettere alla schermata principale di aggiornare la sequenza
+ * selezionata dall'utente.
+ *
+ * @param buttons lista dei pulsanti da mostrare nella griglia
+ * @param onButtonClick funzione invocata quando viene premuto un pulsante
+ * @param modifier modificatore opzionale applicato al contenitore della matrice
+ */
 @Composable
 private fun ButtonsMatrix(
     buttons: List<GridButtonData>,
@@ -242,16 +291,12 @@ private fun ButtonsMatrix(
                 )
             ) {
                 ColorCell(
-                    char = buttons[i * 2].char,
-                    boxColor = buttons[i * 2].boxColor,
-                    textColor = buttons[i * 2].textColor,
+                    buttonData = buttons[i * 2],
                     modifier = Modifier.weight(1f),
                     onClick = onButtonClick
                 )
                 ColorCell(
-                    char = buttons[i * 2 + 1].char,
-                    boxColor = buttons[i * 2 + 1].boxColor,
-                    textColor = buttons[i * 2 + 1].textColor,
+                    buttonData = buttons[i * 2 + 1],
                     modifier = Modifier.weight(1f),
                     onClick = onButtonClick
                 )
@@ -260,25 +305,42 @@ private fun ButtonsMatrix(
     }
 }
 
+/**
+ * Rappresenta una singola cella interattiva della matrice di gioco.
+ *
+ * Questa composable visualizza un pulsante colorato contenente un carattere.
+ * Al clic, il carattere associato viene inviato alla callback [onClick],
+ * consentendo alla schermata principale di aggiornare la sequenza selezionata.
+ *
+ * La funzione adatta automaticamente il colore del pulsante al tema di sistema:
+ * se il dispositivo è in modalità scura, il colore di sfondo viene reso
+ * leggermente più scuro tramite la funzione [darken].
+ *
+ * Inoltre, il rapporto d'aspetto del pulsante viene modificato in base
+ * all'altezza disponibile della finestra, così da migliorare la resa
+ * dell'interfaccia su schermi piccoli o particolarmente compatti.
+ *
+ * @param buttonData contiene informazioni sy carattere associato, colore di box e testo
+ * @param modifier modificatore applicato al pulsante
+ * @param onClick callback eseguita alla pressione del pulsante
+ */
 @Composable
 private fun ColorCell(
-    char: String,
-    boxColor: Color,
-    textColor: Color,
+    buttonData: GridButtonData,
     modifier: Modifier,
     onClick: (String) -> Unit
 ) {
     val cellTAG = "MainScreen:ColorCell"
-    Log.d(cellTAG, "Creating ColorCell with char -> $char, boxColor -> $boxColor, textColor -> $textColor")
+    Log.d(cellTAG, "Creating ColorCell with char -> $buttonData.char, boxColor -> $buttonData.boxColor, textColor -> $buttonData.textColor")
 
     val darkTheme = isSystemInDarkTheme()
-    val normalColor = if (darkTheme) darken(boxColor, 0.85f) else boxColor
+    val normalColor = if (darkTheme) darken(buttonData.boxColor, 0.85f) else buttonData.boxColor
     val buttonAspectRatio = if (LocalWindowInfo.current.containerDpSize.height <= 740.dp) 1.6f else 1f
 
     ElevatedButton(
         onClick = {
-            Log.d(cellTAG, "Button $char pressed")
-            onClick(char)
+            Log.d(cellTAG, "Button $buttonData.char pressed")
+            onClick(buttonData.char)
         },
         modifier = modifier
             .aspectRatio(buttonAspectRatio)
@@ -286,11 +348,11 @@ private fun ColorCell(
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = normalColor,
-            contentColor = textColor
+            contentColor = buttonData.textColor
         )
     ) {
         Text(
-            text = char,
+            text = buttonData.char,
             fontSize = 32.sp
         )
     }
