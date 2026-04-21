@@ -20,11 +20,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 
 class GameHistory: ViewModel () {
-    var games by mutableStateOf<List<List<String>>>(emptyList())
+    var games by mutableStateOf<List<Game>>(emptyList())
         private set
 
-    fun addGame(game: List<String>) {
-        games = games + listOf(game)
+    fun addGame(sequence: List<String>) {
+        games = games + listOf(Game(sequence, games.size + 1))
     }
 }
 
