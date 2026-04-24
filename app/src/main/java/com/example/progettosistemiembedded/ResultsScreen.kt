@@ -132,7 +132,7 @@ private fun ResultRow(
             )
 
             Text(
-                text = game.subList(0, Math.min(game.size, maxSequenceLength))
+                text = game.subList(0, game.size.coerceAtMost(maxSequenceLength))
                     .joinToString(", ") + (if (game.size > maxSequenceLength) " ..." else ""),
                 fontSize = 24.sp,
                 textAlign = TextAlign.End,
