@@ -3,6 +3,12 @@
 
 Sviluppato tramite Android Studio Otter 3 Feature Drop 2025.2.3
 
+L'app è stata testata sui dispositivi:
+- Google Pixel 2
+- Google Pixel 7 pro
+- Google Pixel 9 pro
+sia in lingua italiana sia inglese, utilizzando tema chiaro e scuro.
+
 ### Dispositivo utilizzato per lo sviluppo:
 ```json
 {
