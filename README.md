@@ -1,7 +1,7 @@
 # Project ESP2526
 ### Autore: Boscolo Meneguolo Mattia (2066700)
 
-Sviluppato tramite Android Studio Otter 3 Feature Drop 2025.2.3, da PC con sistema operativo Windows 11
+Sviluppato tramite Android Studio Otter 3 Feature Drop 2025.2.3
 
 ### Dispositivo utilizzato per lo sviluppo:
 ```json

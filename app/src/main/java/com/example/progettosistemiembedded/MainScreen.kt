@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -32,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import android.util.Log
@@ -156,11 +153,14 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                     end.linkTo(boxRef.start, margin = 16.dp)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.fillToConstraints
+                    height = Dimension.fillToConstraints
                 } else {
                     top.linkTo(titleRef.bottom, margin = 24.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
+                    bottom.linkTo(boxRef.top, margin = 24.dp)
                     width = Dimension.percent(0.8f)
+                    height = Dimension.fillToConstraints
                 }
             }
         )
@@ -177,7 +177,7 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                         bottom.linkTo(actionsRef.top, margin = 24.dp)
                         width = Dimension.fillToConstraints
                     } else {
-                        top.linkTo(matrixRef.bottom, margin = 24.dp)
+                        top.linkTo(matrixRef.bottom)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                         bottom.linkTo(actionsRef.top)
@@ -274,17 +274,16 @@ private fun ButtonsMatrix(
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     val mtrTAG = "MainScreen:ButtonsMatrix"
     Log.d(mtrTAG, "Creating ButtonsMatrix with buttons $buttons")
 
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         for (i in 0 until 3) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(
                     12.dp,
                     Alignment.CenterHorizontally
@@ -292,12 +291,12 @@ private fun ButtonsMatrix(
             ) {
                 ColorCell(
                     buttonData = buttons[i * 2],
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxSize(),
                     onClick = onButtonClick
                 )
                 ColorCell(
                     buttonData = buttons[i * 2 + 1],
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxSize(),
                     onClick = onButtonClick
                 )
             }
@@ -335,16 +334,13 @@ private fun ColorCell(
 
     val darkTheme = isSystemInDarkTheme()
     val normalColor = if (darkTheme) darken(buttonData.boxColor, 0.85f) else buttonData.boxColor
-    val buttonAspectRatio = if (LocalWindowInfo.current.containerDpSize.height <= 740.dp) 1.6f else 1f
 
     ElevatedButton(
         onClick = {
             Log.d(cellTAG, "Button $buttonData.char pressed")
             onClick(buttonData.char)
         },
-        modifier = modifier
-            .aspectRatio(buttonAspectRatio)
-            .sizeIn(minWidth = 72.dp, minHeight = 72.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = normalColor,
