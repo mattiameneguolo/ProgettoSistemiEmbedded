@@ -33,6 +33,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import android.util.Log
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * Restituisce una variante più scura del colore passato in input,
@@ -100,6 +103,11 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var sequence by rememberSaveable { mutableStateOf(listOf<String>()) }
+    val sequenceScrollState = rememberScrollState()
+
+    LaunchedEffect(sequence.size) {
+        sequenceScrollState.animateScrollTo(sequenceScrollState.maxValue)
+    }
 
     val buttons = listOf(
         GridButtonData("R", Color.Red, Color.White),
@@ -185,6 +193,7 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                     }
                 }
                 .height(100.dp)
+                .verticalScroll(sequenceScrollState)
         ) {
             Text(
                 text = sequence.joinToString(", "),
