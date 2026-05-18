@@ -40,7 +40,7 @@ import kotlin.collections.joinToString
  * @param games lista delle partite concluse, dove ogni partita è rappresentata come lista di stringhe
  */
 @Composable
-fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>) {
+fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>, onGameClick: (Int) -> Unit) {
 
     val resTAG = "ResultsScreen:ResultsScreen"
 
@@ -78,7 +78,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>) {
         ) {
             items(items=games.reversed(), key={ it.id }) { game ->
                 Log.d(resTAG, "Generating ROW with game: $game")
-                ResultRow(game.sequence)
+                ResultRow(game.id, game.sequence, onGameClick)
             }
         }
     }
@@ -101,7 +101,9 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>) {
  */
 @Composable
 private fun ResultRow(
-    game: List<String>
+    gameId: Int,
+    game: List<String>,
+    onGameClick: (Int) -> Unit
 ) {
     val rowTAG = "ResultsScreen:ResultRow"
 
@@ -118,7 +120,8 @@ private fun ResultRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .height(100.dp)
+            .height(100.dp),
+        onClick = { onGameClick(gameId) }
     ) {
         Row(
             modifier = Modifier
