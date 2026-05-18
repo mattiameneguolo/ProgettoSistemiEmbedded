@@ -53,16 +53,25 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("results") {
                             Log.d(mTAG, "Navigating to results screen with games: ${gameHistory.games}")
-                            ResultsScreen(modifier = Modifier, gameHistory.games, onGameClick = { gameId ->
-                                navController.navigate("game_details/${Uri.encode(gameId.toString())}")
-                            })
+                            ResultsScreen(
+                                modifier = Modifier,
+                                gameHistory.games,
+                                onGameClick = { gameId ->
+                                    navController.navigate("game_details/${Uri.encode(gameId.toString())}")
+                                },
+                                onNewGameClick = {
+                                    navController.navigate("game")
+                                }
+                            )
                         }
                         composable("game") {
                             Log.d(mTAG, "Navigating to game screen")
                             GameScreen(modifier = Modifier, onGameEnd = { sequence ->
                                 Log.d(mTAG, "Game ended with sequence $sequence")
                                 gameHistory.addGame(sequence)
-                                navController.navigate("results")
+                                navController.navigate("results") {
+                                    popUpTo("results")
+                                }
                             })
                         }
                         composable("game_details/{gameId}") { backStackEntry: NavBackStackEntry ->

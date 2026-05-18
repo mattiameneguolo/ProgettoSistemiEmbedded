@@ -3,6 +3,7 @@ package com.example.progettosistemiembedded
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -40,8 +42,12 @@ import kotlin.collections.joinToString
  * @param games lista delle partite concluse, dove ogni partita è rappresentata come lista di stringhe
  */
 @Composable
-fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>, onGameClick: (Int) -> Unit) {
-
+fun ResultsScreen(
+    modifier: Modifier = Modifier,
+    games: List<Game>,
+    onGameClick: (Int) -> Unit,
+    onNewGameClick: () -> Unit
+) {
     val resTAG = "ResultsScreen:ResultsScreen"
 
     Log.d(resTAG, "Creating ResultsScreen with list of games: $games")
@@ -51,7 +57,7 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>, onGameClick:
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        val (titleRef, resultsRef) = createRefs()
+        val (titleRef, contentRef, newGameButtonRef) = createRefs()
 
         Text(
             text = stringResource(R.string.history_title),
@@ -65,21 +71,57 @@ fun ResultsScreen(modifier: Modifier = Modifier, games: List<Game>, onGameClick:
             }
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .constrainAs(resultsRef) {
+        if (games.isEmpty()) {
+            Box(
+                modifier = Modifier.constrainAs(contentRef) {
                     top.linkTo(titleRef.bottom, margin = 24.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
+                    bottom.linkTo(newGameButtonRef.top, margin = 16.dp)
+                    width = Dimension.fillToConstraints
+                    height = Dimension.fillToConstraints
+                },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Nessuna partita. Tocca Nuova partita per iniziare!",
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.constrainAs(contentRef) {
+                    top.linkTo(titleRef.bottom, margin = 24.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(newGameButtonRef.top, margin = 16.dp)
                     width = Dimension.fillToConstraints
                     height = Dimension.fillToConstraints
                 }
-        ) {
-            items(items=games.reversed(), key={ it.id }) { game ->
-                Log.d(resTAG, "Generating ROW with game: $game")
-                ResultRow(game.id, game.sequence, onGameClick)
+            ) {
+                items(items = games.reversed(), key = { it.id }) { game ->
+                    Log.d(resTAG, "Generating ROW with game: $game")
+                    ResultRow(game.id, game.sequence, onGameClick)
+                }
             }
+        }
+
+        Button(
+            onClick = {
+                Log.d(resTAG, "Nuova partita cliccata")
+                onNewGameClick()
+            },
+            modifier = Modifier.constrainAs(newGameButtonRef) {
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom, margin = 16.dp)
+            }
+        ) {
+            Text(
+                text = "Nuova partita",
+                fontSize = 18.sp
+            )
         }
     }
 }
