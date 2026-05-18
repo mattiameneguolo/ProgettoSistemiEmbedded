@@ -48,21 +48,21 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
-                        navController = navController, startDestination = "main",
+                        navController = navController, startDestination = "results",
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("main") {
-                            Log.d(mTAG, "Navigating to main screen")
-                            MainScreen(modifier = Modifier, onGameEnd = { sequence ->
-                                Log.d(mTAG, "Game ended with sequence $sequence")
-                                gameHistory.addGame(sequence)
-                                navController.navigate("results")
-                            })
-                        }
                         composable("results") {
                             Log.d(mTAG, "Navigating to results screen with games: ${gameHistory.games}")
                             ResultsScreen(modifier = Modifier, gameHistory.games, onGameClick = { gameId ->
                                 navController.navigate("game_details/${Uri.encode(gameId.toString())}")
+                            })
+                        }
+                        composable("game") {
+                            Log.d(mTAG, "Navigating to game screen")
+                            GameScreen(modifier = Modifier, onGameEnd = { sequence ->
+                                Log.d(mTAG, "Game ended with sequence $sequence")
+                                gameHistory.addGame(sequence)
+                                navController.navigate("results")
                             })
                         }
                         composable("game_details/{gameId}") { backStackEntry: NavBackStackEntry ->

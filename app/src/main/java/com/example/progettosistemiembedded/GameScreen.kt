@@ -95,9 +95,9 @@ private data class GridButtonData(
  * @param onGameEnd callback invocata al termine della partita con la sequenza selezionata
  */
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
+fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
 
-    val mainTAG = "MainScreen:MainScreen"
+    val gameTAG = "GameScreen:GameScreen"
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -118,7 +118,7 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         GridButtonData("C", Color.Cyan, Color.Black)
     )
 
-    Log.d(mainTAG, "Creating MainScreen with buttons $buttons and orientation ${if (isLandscape) "landscape" else "portrait"}")
+    Log.d(gameTAG, "Creating GameScreen with buttons $buttons and orientation ${if (isLandscape) "landscape" else "portrait"}")
 
     ConstraintLayout(
         modifier = modifier
@@ -150,9 +150,9 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         ButtonsMatrix(
             buttons = buttons,
             onButtonClick = { char ->
-                Log.d(mainTAG, "Button $char pressed, adding to sequence $sequence")
+                Log.d(gameTAG, "Button $char pressed, adding to sequence $sequence")
                 sequence = sequence + char
-                Log.d(mainTAG, "Sequence updated: $sequence")
+                Log.d(gameTAG, "Sequence updated: $sequence")
             },
             modifier = Modifier.constrainAs(matrixRef) {
                 if (isLandscape) {
@@ -225,9 +225,9 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         ) {
             Button(
                 onClick = {
-                    Log.d(mainTAG, "Game canceled, resetting sequence $sequence")
+                    Log.d(gameTAG, "Game canceled, resetting sequence $sequence")
                     sequence = emptyList()
-                    Log.d(mainTAG, "Sequence cleared: $sequence")
+                    Log.d(gameTAG, "Sequence cleared: $sequence")
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -242,10 +242,10 @@ fun MainScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 
             Button(
                 onClick = {
-                    Log.d(mainTAG, "Game ended with $sequence")
+                    Log.d(gameTAG, "Game ended with $sequence")
                     onGameEnd(sequence)
                     sequence = emptyList()
-                    Log.d(mainTAG, "Sequence cleared: $sequence")
+                    Log.d(gameTAG, "Sequence cleared: $sequence")
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -283,7 +283,7 @@ private fun ButtonsMatrix(
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val mtrTAG = "MainScreen:ButtonsMatrix"
+    val mtrTAG = "GameScreen:ButtonsMatrix"
     Log.d(mtrTAG, "Creating ButtonsMatrix with buttons $buttons")
 
     Column(
@@ -338,7 +338,7 @@ private fun ColorCell(
     modifier: Modifier,
     onClick: (String) -> Unit
 ) {
-    val cellTAG = "MainScreen:ColorCell"
+    val cellTAG = "GameScreen:ColorCell"
     Log.d(cellTAG, "Creating ColorCell with char -> $buttonData.char, boxColor -> $buttonData.boxColor, textColor -> $buttonData.textColor")
 
     val darkTheme = isSystemInDarkTheme()
