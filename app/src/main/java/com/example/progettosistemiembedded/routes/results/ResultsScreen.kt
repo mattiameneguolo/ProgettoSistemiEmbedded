@@ -1,4 +1,4 @@
-package com.example.progettosistemiembedded
+package com.example.progettosistemiembedded.routes.results
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.example.progettosistemiembedded.Game
+import com.example.progettosistemiembedded.R
 import kotlin.collections.joinToString
 
 /**

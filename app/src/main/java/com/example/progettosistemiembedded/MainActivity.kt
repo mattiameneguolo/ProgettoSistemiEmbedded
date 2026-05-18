@@ -20,6 +20,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 import androidx.navigation.NavBackStackEntry
+import com.example.progettosistemiembedded.routes.game_details.GameDetailsScreen
+import com.example.progettosistemiembedded.routes.game.GameScreen
+import com.example.progettosistemiembedded.routes.results.ResultsScreen
 
 class GameHistory: ViewModel () {
     var games by mutableStateOf<List<Game>>(emptyList())
@@ -78,7 +81,11 @@ class MainActivity : ComponentActivity() {
                             val gameID = backStackEntry.arguments?.getString("gameId").orEmpty().toInt()
 
                             Log.d(mTAG, "Navigating to game details screen for game: $gameID")
-                            GameDetailsScreen(modifier = Modifier, gameID, gameHistory.games[gameID-1])
+                            GameDetailsScreen(
+                                modifier = Modifier,
+                                gameID,
+                                gameHistory.games[gameID - 1]
+                            )
                         }
                     }
                 }

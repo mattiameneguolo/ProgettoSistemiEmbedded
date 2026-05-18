@@ -1,4 +1,4 @@
-package com.example.progettosistemiembedded
+package com.example.progettosistemiembedded.routes.game
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
@@ -36,6 +36,7 @@ import android.util.Log
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
+import com.example.progettosistemiembedded.R
 
 /**
  * Restituisce una variante più scura del colore passato in input,
