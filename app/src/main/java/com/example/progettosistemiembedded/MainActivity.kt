@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
                             GameScreen(modifier = Modifier, onGameEnd = { sequence ->
                                 Log.d(mTAG, "Game ended with sequence $sequence")
                                 gameHistory.addGame(sequence)
-                                navController.navigate("results") {
+                                navController.navigate("game_details/${Uri.encode((gameHistory.games.size).toString())}") {
                                     popUpTo("results")
                                 }
                             })

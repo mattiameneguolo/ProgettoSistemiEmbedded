@@ -120,7 +120,7 @@ fun ResultsScreen(
         ) {
             Text(
                 text = "Nuova partita",
-                fontSize = 18.sp
+                fontSize = 24.sp
             )
         }
     }

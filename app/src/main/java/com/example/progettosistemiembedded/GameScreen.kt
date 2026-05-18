@@ -103,6 +103,7 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var sequence by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var isGameStarted by rememberSaveable { mutableStateOf(false) }
     val sequenceScrollState = rememberScrollState()
 
     LaunchedEffect(sequence.size) {
@@ -149,6 +150,7 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 
         ButtonsMatrix(
             buttons = buttons,
+            enabled = isGameStarted,
             onButtonClick = { char ->
                 Log.d(gameTAG, "Button $char pressed, adding to sequence $sequence")
                 sequence = sequence + char
@@ -225,18 +227,37 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         ) {
             Button(
                 onClick = {
-                    Log.d(gameTAG, "Game canceled, resetting sequence $sequence")
+                    Log.d(gameTAG, "Game started")
+                    println("Inizia Partita cliccato")
                     sequence = emptyList()
-                    Log.d(gameTAG, "Sequence cleared: $sequence")
+                    isGameStarted = true
                 },
+                enabled = !isGameStarted,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = "Inizia Partita",
+                    fontSize = 16.sp
+                )
+            }
+
+            Button(
+                onClick = {
+                    Log.d(gameTAG, "Game paused with sequence $sequence")
+                    println("Pausa cliccato")
+                },
+                enabled = isGameStarted,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             ) {
                 Text(
-                    text = stringResource(R.string.cancel_game),
-                    fontSize = 18.sp
+                    text = "Pausa",
+                    fontSize = 16.sp
                 )
             }
 
@@ -245,16 +266,18 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                     Log.d(gameTAG, "Game ended with $sequence")
                     onGameEnd(sequence)
                     sequence = emptyList()
+                    isGameStarted = false
                     Log.d(gameTAG, "Sequence cleared: $sequence")
                 },
+                enabled = isGameStarted,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
                 Text(
-                    text = stringResource(R.string.end_game),
-                    fontSize = 18.sp
+                    text = "Fine Partita",
+                    fontSize = 16.sp
                 )
             }
         }
@@ -280,6 +303,7 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 @Composable
 private fun ButtonsMatrix(
     buttons: List<GridButtonData>,
+    enabled: Boolean,
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -300,11 +324,13 @@ private fun ButtonsMatrix(
             ) {
                 ColorCell(
                     buttonData = buttons[i * 2],
+                    enabled = enabled,
                     modifier = Modifier.weight(1f).fillMaxSize(),
                     onClick = onButtonClick
                 )
                 ColorCell(
                     buttonData = buttons[i * 2 + 1],
+                    enabled = enabled,
                     modifier = Modifier.weight(1f).fillMaxSize(),
                     onClick = onButtonClick
                 )
@@ -335,6 +361,7 @@ private fun ButtonsMatrix(
 @Composable
 private fun ColorCell(
     buttonData: GridButtonData,
+    enabled: Boolean,
     modifier: Modifier,
     onClick: (String) -> Unit
 ) {
@@ -349,6 +376,7 @@ private fun ColorCell(
             Log.d(cellTAG, "Button $buttonData.char pressed")
             onClick(buttonData.char)
         },
+        enabled = enabled,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
