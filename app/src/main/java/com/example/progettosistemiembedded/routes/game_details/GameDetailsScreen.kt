@@ -12,6 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,7 +39,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
             .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
 
-        val (titleRef, subtitleRef, correctSequenceLenRef, sequenceCardRef) = createRefs()
+        val (titleRef, subtitleRef, sequenceLenRef, errorIndexRef, sequenceCardRef) = createRefs()
 
         Text(
             text = stringResource(R.string.history_title),
@@ -62,17 +65,32 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
             }
         )
 
+
         Text(
-            text = "Correct sequence length: ${game.sequence.size - 1}",
+            text = "Sequence length: ${game.sequence.size}",
             fontSize = 24.sp,
             textAlign = TextAlign.Start,
-            modifier = Modifier.constrainAs(correctSequenceLenRef) {
+            modifier = Modifier.constrainAs(sequenceLenRef) {
                 top.linkTo(subtitleRef.bottom, margin = 32.dp)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
                 width = Dimension.fillToConstraints
             }
         )
+
+        if (game.errorIndex >= 0) {
+            Text(
+                text = "Failed at index: ${game.errorIndex}",
+                fontSize = 24.sp,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.constrainAs(errorIndexRef) {
+                    top.linkTo(sequenceLenRef.bottom, margin = 18.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                }
+            )
+        }
 
         Card(
             colors = CardDefaults.cardColors(
@@ -82,7 +100,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
                 .padding(vertical = 8.dp)
                 .verticalScroll(sequenceScrollState)
                 .constrainAs(sequenceCardRef) {
-                    top.linkTo(correctSequenceLenRef.bottom, margin = 12.dp)
+                    top.linkTo(if (game.errorIndex >= 0) errorIndexRef.bottom else sequenceLenRef.bottom, margin = 12.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
@@ -91,7 +109,25 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
                 }
         ) {
                 Text(
-                    text = game.sequence.joinToString(", "),
+                    text = buildAnnotatedString {
+                        game.sequence.forEachIndexed { index, char ->
+                            if (index > 0) {
+                                append(", ")
+                            }
+
+                            if (game.errorIndex in 0..index) {
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    append(char)
+                                }
+                            } else {
+                                append(char)
+                            }
+                        }
+                    },
                     fontSize = 24.sp,
                     textAlign = TextAlign.Start,
                     modifier = Modifier
