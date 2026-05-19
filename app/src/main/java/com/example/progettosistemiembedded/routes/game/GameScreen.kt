@@ -36,11 +36,16 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.text.withStyle
 import com.example.progettosistemiembedded.R
+import com.example.progettosistemiembedded.audio.GameSoundManager
 import kotlinx.coroutines.delay
 
 /**
@@ -136,6 +141,18 @@ fun GameScreen(
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val context = LocalContext.current
+
+    val soundManager = remember {
+        GameSoundManager(context)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            soundManager.release()
+        }
+    }
 
     val buttons = listOf(
         GridButtonData("R", Color.Red, Color.White),
@@ -261,11 +278,12 @@ fun GameScreen(
                 playerSequence = emptyList()
                 activeColor = null
 
-                delay(300)
+                delay(150)
 
                 activeColor = targetSequence[playbackIndex]
+                soundManager.play(targetSequence[playbackIndex])
 
-                delay(600)
+                delay(400)
 
                 activeColor = null
 
@@ -393,6 +411,7 @@ fun GameScreen(
                 }
 
                 Log.d(gameTAG, "Player pressed $char")
+                soundManager.play(char)
 
                 activeColor = char
                 playerFeedbackTick += 1
@@ -404,6 +423,7 @@ fun GameScreen(
                     /* Input errato, partita persa */
                     errorIndex = currentIndex
                     gamePhase = GamePhase.GAME_OVER
+                    soundManager.play("error")
 
                     Log.d(
                         gameTAG,
