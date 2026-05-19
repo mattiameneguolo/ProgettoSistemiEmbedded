@@ -42,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.text.withStyle
 import com.example.progettosistemiembedded.R
 import com.example.progettosistemiembedded.audio.GameSoundManager

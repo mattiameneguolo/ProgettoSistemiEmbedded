@@ -22,7 +22,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.example.progettosistemiembedded.Game
 import com.example.progettosistemiembedded.R
-import kotlin.collections.joinToString
 
 @Composable
 fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
