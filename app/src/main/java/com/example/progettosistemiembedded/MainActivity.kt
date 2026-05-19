@@ -28,8 +28,8 @@ class GameHistory: ViewModel () {
     var games by mutableStateOf<List<Game>>(emptyList())
         private set
 
-    fun addGame(sequence: List<String>) {
-        games = games + listOf(Game(sequence, games.size + 1))
+    fun addGame(sequence: List<String>, errorIndex: Int) {
+        games = games + listOf(Game(sequence, errorIndex, games.size + 1))
     }
 }
 
@@ -69,13 +69,25 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("game") {
                             Log.d(mTAG, "Navigating to game screen")
-                            GameScreen(modifier = Modifier, onGameEnd = { sequence ->
-                                Log.d(mTAG, "Game ended with sequence $sequence")
-                                gameHistory.addGame(sequence)
-                                navController.navigate("game_details/${Uri.encode((gameHistory.games.size).toString())}") {
-                                    popUpTo("results")
+                            GameScreen(
+                                modifier = Modifier,
+                                onGameEnd = { sequence, errorIndex ->
+                                    Log.d(mTAG, "Game ended with sequence $sequence, errorIndex: $errorIndex")
+                                    gameHistory.addGame(sequence, errorIndex)
+                                    navController.navigate("results") {
+                                        popUpTo("results") {
+                                            inclusive = true
+                                        }
+                                    }
+                                },
+                                onGameCanceled = {
+                                    navController.navigate("results") {
+                                        popUpTo("results") {
+                                            inclusive = true
+                                        }
+                                    }
                                 }
-                            })
+                            )
                         }
                         composable("game_details/{gameId}") { backStackEntry: NavBackStackEntry ->
                             val gameID = backStackEntry.arguments?.getString("gameId").orEmpty().toInt()

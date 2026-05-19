@@ -33,10 +33,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.example.progettosistemiembedded.R
+import kotlinx.coroutines.delay
 
 /**
  * Restituisce una variante più scura del colore passato in input,
@@ -58,6 +63,25 @@ private fun darken(color: Color, factor: Float = 0.85f): Color {
 }
 
 /**
+ * Restituisce una variante più chiara del colore passato in input,
+ * aumentando la luminosità dei componenti RGB.
+ *
+ * Viene utilizzata per evidenziare il pulsante attivo durante
+ * la proposta del computer e durante il feedback del giocatore.
+ *
+ * @param color colore di partenza da schiarire
+ * @param factor fattore di schiarimento applicato ai componenti RGB
+ * @return una nuova istanza di [Color] più chiara rispetto all'originale
+ */
+private fun lighten(color: Color, factor: Float = 0.35f): Color {
+    return color.copy(
+        red = color.red + (1f - color.red) * factor,
+        green = color.green + (1f - color.green) * factor,
+        blue = color.blue + (1f - color.blue) * factor
+    )
+}
+
+/**
  * Classe privata che rappresenta un pulsante della griglia di gioco.
  *
  * Ogni elemento contiene il carattere da visualizzare all'interno
@@ -74,42 +98,44 @@ private data class GridButtonData(
 )
 
 /**
- * Composable principale che costruisce la schermata di gioco.
+ * Enumerazione privata che rappresenta le varie fasi di gioco,
+ * utilizzata per gestire il l'annullamento/terminazione della partita,
+ * l'attivazione dei vari tasti e la gestione della routine incaricata
+ * di fornire la sequenza di tasti da premere
  *
- * La funzione gestisce lo stato della sequenza selezionata
- * dall'utente e organizza i componenti principali dell'interfaccia:
- * titolo, matrice di pulsanti colorati, area di riepilogo della
- * sequenza inserita e pulsanti finali di azione.
- *
- * Il layout si adatta automaticamente all'orientamento del dispositivo.
- * In modalità portrait gli elementi vengono disposti verticalmente,
- * mentre in landscape la schermata viene riorganizzata per sfruttare
- * meglio lo spazio orizzontale disponibile, posizionando la matrice
- * di pulsanti a sinistra e titolo, box e pulsanti di conferma a destra.
- *
- * Quando l'utente preme il pulsante di conferma, la sequenza corrente
- * viene inviata tramite la callback [onGameEnd] e successivamente
- * azzerata, mentra quando preme il pulsante di cancellazione, la
- * sequenza viene direttamente azzerata.
+ * @property IDLE = In attesa di avvio della partita
+ * @property COMPUTER_PLAYING = La routine mostra la sequenza
+ * @property PAUSED = Gioco in pausa
+ * @property PLAYER_TURN = Gioco in attesa di input utente
+ * @property GAME_OVER = Partita terminata
+ * @property WAITING_NEXT_SEQUENCE = Delay fra input utente e COMPUTER_PLAYING
+ */
+private enum class GamePhase {
+    IDLE,
+    COMPUTER_PLAYING,
+    PAUSED,
+    PLAYER_TURN,
+    GAME_OVER,
+    WAITING_NEXT_SEQUENCE
+}
+
+/**
+ * TODO: Aggiornare descrizione funzione
  *
  * @param modifier modificatore opzionale applicato al layout principale
- * @param onGameEnd callback invocata al termine della partita con la sequenza selezionata
+ * @param onGameEnd callback invocata per terminare e salvare la partita
+ * @param onGameCanceled callback invocata per terminare la partita senza salvarla
  */
 @Composable
-fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>) -> Unit) {
-
+fun GameScreen(
+    modifier: Modifier = Modifier,
+    onGameEnd: (sequence: List<String>, errorIndex: Int) -> Unit,
+    onGameCanceled: () -> Unit
+) {
     val gameTAG = "GameScreen:GameScreen"
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    var sequence by rememberSaveable { mutableStateOf(listOf<String>()) }
-    var isGameStarted by rememberSaveable { mutableStateOf(false) }
-    val sequenceScrollState = rememberScrollState()
-
-    LaunchedEffect(sequence.size) {
-        sequenceScrollState.animateScrollTo(sequenceScrollState.maxValue)
-    }
 
     val buttons = listOf(
         GridButtonData("R", Color.Red, Color.White),
@@ -120,7 +146,215 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
         GridButtonData("C", Color.Cyan, Color.Black)
     )
 
-    Log.d(gameTAG, "Creating GameScreen with buttons $buttons and orientation ${if (isLandscape) "landscape" else "portrait"}")
+    var targetSequence by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var playerSequence by rememberSaveable { mutableStateOf(listOf<String>()) }
+
+    var gamePhase by rememberSaveable { mutableStateOf(GamePhase.IDLE) }
+    var playbackIndex by rememberSaveable { mutableStateOf(0) }
+
+    var activeColor by rememberSaveable { mutableStateOf<String?>(null) }
+    var errorIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+
+    var playerFeedbackTick by rememberSaveable { mutableStateOf(0) }
+
+    val sequenceScrollState = rememberScrollState()
+
+    val isGameRunning = gamePhase != GamePhase.IDLE && gamePhase != GamePhase.GAME_OVER
+
+    fun resetLocalGame() {
+        Log.d(gameTAG, "Resetting local game")
+
+        targetSequence = emptyList()
+        playerSequence = emptyList()
+        playbackIndex = 0
+        activeColor = null
+        errorIndex = null
+        gamePhase = GamePhase.IDLE
+    }
+
+    fun startNewGame() {
+        Log.d(gameTAG, "Game started")
+
+        targetSequence = listOf(buttons.random().char)
+        playerSequence = emptyList()
+        playbackIndex = 0
+        activeColor = null
+        errorIndex = null
+        gamePhase = GamePhase.COMPUTER_PLAYING
+    }
+
+    fun finishGameManuallyOrCancel() {
+        /*
+         * Fine partita.
+         * Rimuovo l'ultimo carattere della targetSequence perché è il carattere
+         * aggiunto dal computer per il turno successivo/non completato.
+         */
+        val sequenceToSave = targetSequence.dropLast(1)
+
+        /*
+         * Se dopo aver rimosso l'ultimo carattere non rimane nulla,
+         * significa che il giocatore non ha completato nessuna sequenza valida.
+         * Quindi annullo la partita senza salvarla.
+         */
+        if (sequenceToSave.isEmpty()) {
+            Log.d(gameTAG, "Game canceled, no completed sequence to save")
+            resetLocalGame()
+            onGameCanceled()
+            return
+        }
+
+        targetSequence = sequenceToSave
+        errorIndex = null
+        activeColor = null
+        playbackIndex = 0
+        gamePhase = GamePhase.GAME_OVER
+
+        Log.d(
+            gameTAG,
+            "Game ended manually without error. Saved sequence: $sequenceToSave"
+        )
+
+        /**
+         * Uso -1 come valore convenzionale per dire:
+         * partita terminata manualmente, nessun errore.
+         */
+        onGameEnd(sequenceToSave, -1)
+    }
+
+    /**
+     * Gestione comportamento tasto back:
+     *  - stato partita = GAME_OVER -> Torno alla home salvando la partita
+     *  - stato partita != GAME_OVER -> Eseguo finishGameManuallyOrCancel() per verificare se salvare o no la partita
+     */
+    BackHandler(enabled = gamePhase != GamePhase.IDLE) {
+        if (gamePhase == GamePhase.GAME_OVER) {
+            Log.d(gameTAG, "Back pressed after game over, saving game $targetSequence")
+            onGameEnd(targetSequence, errorIndex ?: -1)
+        } else {
+            Log.d(gameTAG, "Back pressed during game, ending the game...")
+            finishGameManuallyOrCancel()
+        }
+    }
+
+    /**
+     * Coroutine che gestisce lo stato della partita:
+     *   - GamePhase.WAITING_NEXT_SEQUENCE -> Delay di 1 secondo prima di mostrare la prossima sequenza
+     *   - GamePhase.COMPUTER_PLAYING -> Avvio routine di riproduzione della sequenza
+     * Si avvia automaticamente al cambio del valore di gamePhase, playbackIndex o targetSequence
+     *
+     * @param gamePhase fase di gioco corrente
+     * @param playbackIndex indice della cella corrente da riprodurre
+     * @param targetSequence sequenza da riprodurre
+     */
+    LaunchedEffect(gamePhase, playbackIndex, targetSequence) {
+        if (gamePhase == GamePhase.WAITING_NEXT_SEQUENCE) {
+            delay(1000)
+
+            playbackIndex = 0
+            activeColor = null
+            gamePhase = GamePhase.COMPUTER_PLAYING
+        }
+
+        if (gamePhase == GamePhase.COMPUTER_PLAYING && targetSequence.isNotEmpty()) {
+            if (playbackIndex < targetSequence.size) {
+                /* Riproduzione sequenza da parte del computer */
+                playerSequence = emptyList()
+                activeColor = null
+
+                delay(300)
+
+                activeColor = targetSequence[playbackIndex]
+
+                delay(600)
+
+                activeColor = null
+
+                delay(250)
+
+                playbackIndex += 1
+            } else {
+                /* Riproduzione sequenza terminata, passa il turno al giocatore */
+                playbackIndex = 0
+                playerSequence = emptyList()
+                activeColor = null
+                gamePhase = GamePhase.PLAYER_TURN
+
+                Log.d(gameTAG, "Computer sequence ended, player turn started")
+            }
+        }
+    }
+
+    /**
+     * Coroutine che ripulisce l'activeColor 180ms dopo la pressione di
+     * un tasto della matrice da parte dell'utente
+     */
+    LaunchedEffect(playerFeedbackTick, gamePhase) {
+        if (playerFeedbackTick > 0 && gamePhase == GamePhase.PLAYER_TURN) {
+            delay(180)
+
+            if (gamePhase == GamePhase.PLAYER_TURN) {
+                activeColor = null
+            }
+        }
+    }
+
+    /**
+     * Coroutine che fa in modo che lo scroll nel box di testo mostri
+     * sempre l'ultimo carattere inserito nel giocatore, scrollando sempre verso
+     * il basso all'aggiunta di un nuovo carattere nella sequenza
+     */
+    LaunchedEffect(playerSequence.size, targetSequence.size, gamePhase) {
+        sequenceScrollState.animateScrollTo(sequenceScrollState.maxValue)
+    }
+
+    val sequenceText = buildAnnotatedString {
+        when (gamePhase) {
+
+            /* Pulizia TextBox */
+            GamePhase.IDLE,
+            GamePhase.COMPUTER_PLAYING,
+            GamePhase.PAUSED -> {
+                append("")
+            }
+
+            /* Scrittura sequenza del giocatore nella TextBox */
+            GamePhase.PLAYER_TURN -> {
+                append(playerSequence.joinToString(", "))
+            }
+
+            /* Scrittura sequenza giocatore con segnalazione errore nella TextBox */
+            GamePhase.GAME_OVER -> {
+                targetSequence.forEachIndexed { index, color ->
+                    if (index > 0) {
+                        append(", ")
+                    }
+
+                    /* Coloro caratteri errati di rosso */
+                    if (errorIndex != null && index >= errorIndex!!) {
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            append(color)
+                        }
+                    } else {
+                        append(color)
+                    }
+                }
+            }
+
+            /* Scrittura sequenza del giocatore nella TextBox */
+            GamePhase.WAITING_NEXT_SEQUENCE -> {
+                append(playerSequence.joinToString(", "))
+            }
+        }
+    }
+
+    Log.d(
+        gameTAG,
+        "Creating GameScreen with phase $gamePhase, target $targetSequence, player $playerSequence"
+    )
 
     ConstraintLayout(
         modifier = modifier
@@ -133,29 +367,59 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
             text = stringResource(R.string.game_title),
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .constrainAs(titleRef) {
-                    if (isLandscape) {
-                        top.linkTo(parent.top)
-                        start.linkTo(matrixRef.end)
-                        end.linkTo(parent.end)
-                        width = Dimension.fillToConstraints
-                    } else {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        width = Dimension.fillToConstraints
-                    }
+            modifier = Modifier.constrainAs(titleRef) {
+                if (isLandscape) {
+                    top.linkTo(parent.top)
+                    start.linkTo(matrixRef.end)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                } else {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
                 }
+            }
         )
 
         ButtonsMatrix(
             buttons = buttons,
-            enabled = isGameStarted,
+            inputEnabled = gamePhase == GamePhase.PLAYER_TURN,
+            activeColor = activeColor,
             onButtonClick = { char ->
-                Log.d(gameTAG, "Button $char pressed, adding to sequence $sequence")
-                sequence = sequence + char
-                Log.d(gameTAG, "Sequence updated: $sequence")
+                if (gamePhase != GamePhase.PLAYER_TURN) {
+                    /* I pulsanti non devono fare nulla, esco dalla lambda */
+                    return@ButtonsMatrix
+                }
+
+                Log.d(gameTAG, "Player pressed $char")
+
+                activeColor = char
+                playerFeedbackTick += 1
+
+                playerSequence = playerSequence + char
+                val currentIndex = playerSequence.lastIndex
+
+                if (char != targetSequence[currentIndex]) {
+                    /* Input errato, partita persa */
+                    errorIndex = currentIndex
+                    gamePhase = GamePhase.GAME_OVER
+
+                    Log.d(
+                        gameTAG,
+                        "Wrong button. Expected ${targetSequence[currentIndex]}, received $char. Game over."
+                    )
+                } else if (playerSequence.size == targetSequence.size) {
+                    /* Sequenza replicata correttamente */
+                    Log.d(gameTAG, "Sequence completed correctly")
+
+                    /* Aggiungo nuovo carattere alla targetSequence */
+                    targetSequence = targetSequence + buttons.random().char
+                    playbackIndex = 0
+                    activeColor = null
+                    errorIndex = null
+                    gamePhase = GamePhase.WAITING_NEXT_SEQUENCE
+                }
             },
             modifier = Modifier.constrainAs(matrixRef) {
                 if (isLandscape) {
@@ -199,7 +463,7 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                 .verticalScroll(sequenceScrollState)
         ) {
             Text(
-                text = sequence.joinToString(", "),
+                text = sequenceText,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(16.dp)
             )
@@ -222,18 +486,16 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
                     }
                 },
             horizontalArrangement = Arrangement.spacedBy(
-                12.dp,
+                8.dp,
                 Alignment.CenterHorizontally
             )
         ) {
             Button(
                 onClick = {
-                    Log.d(gameTAG, "Game started")
-                    println("Inizia Partita cliccato")
-                    sequence = emptyList()
-                    isGameStarted = true
+                    Log.d(gameTAG, "Start Game pressed")
+                    startNewGame()
                 },
-                enabled = !isGameStarted,
+                enabled = gamePhase == GamePhase.IDLE,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -241,36 +503,47 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
             ) {
                 Text(
                     text = "Inizia Partita",
-                    fontSize = 16.sp
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
                 )
             }
 
             Button(
                 onClick = {
-                    Log.d(gameTAG, "Game paused with sequence $sequence")
-                    println("Pausa cliccato")
+                    if (gamePhase == GamePhase.COMPUTER_PLAYING) {
+                        Log.d(gameTAG, "Game paused")
+                        gamePhase = GamePhase.PAUSED
+                        activeColor = null
+                    } else if (gamePhase == GamePhase.PAUSED) {
+                        Log.d(gameTAG, "Game resumed")
+                        gamePhase = GamePhase.COMPUTER_PLAYING
+                    }
                 },
-                enabled = isGameStarted,
+                enabled = gamePhase == GamePhase.COMPUTER_PLAYING ||
+                        gamePhase == GamePhase.PAUSED,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             ) {
                 Text(
-                    text = "Pausa",
-                    fontSize = 16.sp
+                    text = if (gamePhase == GamePhase.PAUSED) "Riprendi" else "Pausa",
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
                 )
             }
 
             Button(
                 onClick = {
-                    Log.d(gameTAG, "Game ended with $sequence")
-                    onGameEnd(sequence)
-                    sequence = emptyList()
-                    isGameStarted = false
-                    Log.d(gameTAG, "Sequence cleared: $sequence")
+                    Log.d(gameTAG, "End game pressed")
+
+                    if (gamePhase == GamePhase.GAME_OVER) {
+                        onGameEnd(targetSequence, errorIndex ?: -1)
+                    } else {
+                        finishGameManuallyOrCancel()
+                    }
                 },
-                enabled = isGameStarted,
+                enabled = isGameRunning || gamePhase == GamePhase.GAME_OVER,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError
@@ -278,7 +551,8 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
             ) {
                 Text(
                     text = "Fine Partita",
-                    fontSize = 16.sp
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -304,7 +578,8 @@ fun GameScreen(modifier: Modifier = Modifier, onGameEnd: (sequence: List<String>
 @Composable
 private fun ButtonsMatrix(
     buttons: List<GridButtonData>,
-    enabled: Boolean,
+    inputEnabled: Boolean,
+    activeColor: String?,
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -317,7 +592,9 @@ private fun ButtonsMatrix(
     ) {
         for (i in 0 until 3) {
             Row(
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(
                     12.dp,
                     Alignment.CenterHorizontally
@@ -325,14 +602,21 @@ private fun ButtonsMatrix(
             ) {
                 ColorCell(
                     buttonData = buttons[i * 2],
-                    enabled = enabled,
-                    modifier = Modifier.weight(1f).fillMaxSize(),
+                    inputEnabled = inputEnabled,
+                    isActive = activeColor == buttons[i * 2].char,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
                     onClick = onButtonClick
                 )
+
                 ColorCell(
                     buttonData = buttons[i * 2 + 1],
-                    enabled = enabled,
-                    modifier = Modifier.weight(1f).fillMaxSize(),
+                    inputEnabled = inputEnabled,
+                    isActive = activeColor == buttons[i * 2 + 1].char,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
                     onClick = onButtonClick
                 )
             }
@@ -362,27 +646,39 @@ private fun ButtonsMatrix(
 @Composable
 private fun ColorCell(
     buttonData: GridButtonData,
-    enabled: Boolean,
+    inputEnabled: Boolean,
+    isActive: Boolean,
     modifier: Modifier,
     onClick: (String) -> Unit
 ) {
     val cellTAG = "GameScreen:ColorCell"
-    Log.d(cellTAG, "Creating ColorCell with char -> $buttonData.char, boxColor -> $buttonData.boxColor, textColor -> $buttonData.textColor")
 
     val darkTheme = isSystemInDarkTheme()
-    val normalColor = if (darkTheme) darken(buttonData.boxColor, 0.85f) else buttonData.boxColor
+    val normalColor = if (darkTheme) {
+        darken(buttonData.boxColor, 0.85f)
+    } else {
+        buttonData.boxColor
+    }
+
+    val buttonContainerColor = if (isActive) {
+        lighten(normalColor)
+    } else {
+        darken(normalColor)
+    }
 
     ElevatedButton(
         onClick = {
-            Log.d(cellTAG, "Button $buttonData.char pressed")
+            Log.d(cellTAG, "Button ${buttonData.char} pressed")
             onClick(buttonData.char)
         },
-        enabled = enabled,
+        enabled = inputEnabled,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = normalColor,
-            contentColor = buttonData.textColor
+            containerColor = buttonContainerColor,
+            contentColor = buttonData.textColor,
+            disabledContainerColor = buttonContainerColor,
+            disabledContentColor = buttonData.textColor
         )
     ) {
         Text(
