@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.example.progettosistemiembedded.Game
+import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.R
 import kotlin.collections.joinToString
 
@@ -104,7 +104,7 @@ fun ResultsScreen(
             ) {
                 items(items = games.reversed(), key = { it.id }) { game ->
                     Log.d(resTAG, "Generating ROW with game: $game")
-                    ResultRow(game.id, game.sequence, onGameClick)
+                    ResultRow(game, onGameClick)
                 }
             }
         }
@@ -145,17 +145,18 @@ fun ResultsScreen(
  */
 @Composable
 private fun ResultRow(
-    gameId: Int,
-    game: List<String>,
+    game: Game,
     onGameClick: (Int) -> Unit
 ) {
     val rowTAG = "ResultsScreen:ResultRow"
+
+    val gameSequence = game.sequence.split(",")
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val maxSequenceLength: Int = (if (isLandscape) 12 else 8)
 
-    Log.d(rowTAG, "Creating ResultRow with game: $game, sequence length: ${game.size}")
+    Log.d(rowTAG, "Creating ResultRow with game: $game, sequence length: ${gameSequence.size}")
 
     Card(
         colors = CardDefaults.cardColors(
@@ -165,7 +166,7 @@ private fun ResultRow(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .height(100.dp),
-        onClick = { onGameClick(gameId) }
+        onClick = { onGameClick(game.id) }
     ) {
         Row(
             modifier = Modifier
@@ -174,13 +175,13 @@ private fun ResultRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = game.size.toString(),
+                text = gameSequence.size.toString(),
                 fontSize = 24.sp
             )
 
             Text(
-                text = game.subList(0, game.size.coerceAtMost(maxSequenceLength))
-                    .joinToString(", ") + (if (game.size > maxSequenceLength) " ..." else ""),
+                text = gameSequence.subList(0, gameSequence.size.coerceAtMost(maxSequenceLength))
+                    .joinToString(", ") + (if (gameSequence.size > maxSequenceLength) " ..." else ""),
                 fontSize = 24.sp,
                 textAlign = TextAlign.End,
                 modifier = Modifier

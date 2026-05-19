@@ -20,17 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.example.progettosistemiembedded.Game
+import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.R
 
 @Composable
-fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
+fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
     val resTAG = "ResultsScreen:ResultsScreen"
 
     val sequenceScrollState = rememberScrollState()
+    
+    val gameSequence = game.sequence.split(",")
 
-    Log.d(resTAG, "Creating GameDateilsScreen for game: $gameId) $game")
+    Log.d(resTAG, "Creating GameDateilsScreen for game: $game.id) $game")
 
     ConstraintLayout(
         modifier = modifier
@@ -53,7 +55,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
         )
 
         Text(
-            text = "Result of game $gameId:",
+            text = "Result of game $game.id:",
             fontSize = 28.sp,
             textAlign = TextAlign.Start,
             modifier = Modifier.constrainAs(subtitleRef) {
@@ -66,7 +68,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
 
 
         Text(
-            text = "Sequence length: ${game.sequence.size}",
+            text = "Sequence length: ${gameSequence.size}",
             fontSize = 24.sp,
             textAlign = TextAlign.Start,
             modifier = Modifier.constrainAs(sequenceLenRef) {
@@ -109,7 +111,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, gameId: Int, game: Game) {
         ) {
                 Text(
                     text = buildAnnotatedString {
-                        game.sequence.forEachIndexed { index, char ->
+                        gameSequence.forEachIndexed { index, char ->
                             if (index > 0) {
                                 append(", ")
                             }

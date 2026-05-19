@@ -16,22 +16,17 @@ import com.example.progettosistemiembedded.ui.theme.SimonGameTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavBackStackEntry
+import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.routes.game_details.GameDetailsScreen
 import com.example.progettosistemiembedded.routes.game.GameScreen
 import com.example.progettosistemiembedded.routes.results.ResultsScreen
-
-class GameHistory: ViewModel () {
-    var games by mutableStateOf<List<Game>>(emptyList())
-        private set
-
-    fun addGame(sequence: List<String>, errorIndex: Int) {
-        games = games + listOf(Game(sequence, errorIndex, games.size + 1))
-    }
-}
+import androidx.room.Room
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -41,13 +36,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "simon-2k26-db"
+        ).build()
+
         Log.d(mTAG, "Creating MainActivity view")
 
         setContent {
             SimonGameTheme {
 
                 val navController = rememberNavController()
-                val gameHistory: GameHistory = viewModel()
+                val scope = rememberCoroutineScope()
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
@@ -55,10 +55,19 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("results") {
-                            Log.d(mTAG, "Navigating to results screen with games: ${gameHistory.games}")
+                            var games by remember {
+                                mutableStateOf<List<Game>>(emptyList())
+                            }
+
+                            LaunchedEffect(Unit) {
+                                games = db.gameDao().getAllGames()
+                            }
+
+                            Log.d(mTAG, "Navigating to results screen with games: $games")
+
                             ResultsScreen(
                                 modifier = Modifier,
-                                gameHistory.games,
+                                games = games,
                                 onGameClick = { gameId ->
                                     navController.navigate("game_details/${Uri.encode(gameId.toString())}")
                                 },
@@ -73,10 +82,19 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier,
                                 onGameEnd = { sequence, errorIndex ->
                                     Log.d(mTAG, "Game ended with sequence $sequence, errorIndex: $errorIndex")
-                                    gameHistory.addGame(sequence, errorIndex)
-                                    navController.navigate("results") {
-                                        popUpTo("results") {
-                                            inclusive = true
+
+                                    val game = Game(
+                                        sequence = sequence.joinToString(","),
+                                        errorIndex = errorIndex
+                                    )
+
+                                    scope.launch {
+                                        db.gameDao().insertGame(game)
+
+                                        navController.navigate("results") {
+                                            popUpTo("results") {
+                                                inclusive = true
+                                            }
                                         }
                                     }
                                 },
@@ -92,12 +110,22 @@ class MainActivity : ComponentActivity() {
                         composable("game_details/{gameId}") { backStackEntry: NavBackStackEntry ->
                             val gameID = backStackEntry.arguments?.getString("gameId").orEmpty().toInt()
 
+                            var game by remember {
+                                mutableStateOf<Game?>(null)
+                            }
+
+                            LaunchedEffect(gameID) {
+                                game = db.gameDao().getGameById(gameID)
+                            }
+
                             Log.d(mTAG, "Navigating to game details screen for game: $gameID")
-                            GameDetailsScreen(
-                                modifier = Modifier,
-                                gameID,
-                                gameHistory.games[gameID - 1]
-                            )
+
+                            game?.let {
+                                GameDetailsScreen(
+                                    modifier = Modifier,
+                                    game = it
+                                )
+                            }
                         }
                     }
                 }
