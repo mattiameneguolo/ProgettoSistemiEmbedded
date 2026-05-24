@@ -55,7 +55,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
         )
 
         Text(
-            text = "Result of game $game.id:",
+            text = stringResource(R.string.result_of_game, game.id),
             fontSize = 28.sp,
             textAlign = TextAlign.Start,
             modifier = Modifier.constrainAs(subtitleRef) {
@@ -68,7 +68,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
 
         Text(
-            text = "Sequence length: ${gameSequence.size}",
+            text = stringResource(R.string.sequence_length, gameSequence.size),
             fontSize = 24.sp,
             textAlign = TextAlign.Start,
             modifier = Modifier.constrainAs(sequenceLenRef) {
@@ -81,7 +81,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
         if (game.errorIndex >= 0) {
             Text(
-                text = "Failed at index: ${game.errorIndex}",
+                text = stringResource(R.string.failed_at, game.errorIndex),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(errorIndexRef) {

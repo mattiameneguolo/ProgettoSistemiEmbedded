@@ -521,7 +521,7 @@ fun GameScreen(
                 )
             ) {
                 Text(
-                    text = "Inizia Partita",
+                    text = stringResource(R.string.start_game),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center
                 )
@@ -546,7 +546,9 @@ fun GameScreen(
                 )
             ) {
                 Text(
-                    text = if (gamePhase == GamePhase.PAUSED) "Riprendi" else "Pausa",
+                    text = if (gamePhase == GamePhase.PAUSED)
+                        stringResource(R.string.resume_game)
+                        else stringResource(R.string.pause_game),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center
                 )
@@ -569,7 +571,7 @@ fun GameScreen(
                 )
             ) {
                 Text(
-                    text = "Fine Partita",
+                    text = stringResource(R.string.end_game),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center
                 )

@@ -3,4 +3,12 @@
     <string name="cancel_game">Cancella Partita</string>
     <string name="end_game">Termina Partita</string>
     <string name="history_title">📋 Cronologia Partite</string>
+    <string name="start_game">Inizia Partita</string>
+    <string name="pause_game">Pausa</string>
+    <string name="resume_game">Riprendi</string>
+    <string name="result_of_game">Risultato della partita %1$d:</string>
+    <string name="sequence_length">Lunghezza sequenza: %1$d</string>
+    <string name="failed_at">Sbagliato all\'indice: %1$d</string>
+    <string name="no_game_found">Nessuna partita. Tocca Nuova partita per iniziare!</string>
+    <string name="new_game">Nuova Partita</string>
 </resources>

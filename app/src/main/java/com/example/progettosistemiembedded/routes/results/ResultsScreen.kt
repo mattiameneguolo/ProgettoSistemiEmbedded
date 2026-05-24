@@ -86,7 +86,7 @@ fun ResultsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Nessuna partita. Tocca Nuova partita per iniziare!",
+                    text = stringResource(R.string.no_game_found),
                     fontSize = 22.sp,
                     textAlign = TextAlign.Center
                 )
@@ -121,7 +121,7 @@ fun ResultsScreen(
             }
         ) {
             Text(
-                text = "Nuova partita",
+                text = stringResource(R.string.new_game),
                 fontSize = 24.sp
             )
         }
