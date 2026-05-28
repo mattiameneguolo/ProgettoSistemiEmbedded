@@ -124,7 +124,15 @@ private enum class GamePhase {
 }
 
 /**
- * TODO: Aggiornare descrizione funzione
+ * Schermata di gioco.
+ *
+ * Gestisce l'intera logica della partita:
+ * - avvio di una nuova partita;
+ * - riproduzione automatica della sequenza da parte del computer;
+ * - acquisizione input utente
+ * - verifica correttezza della sequenza in input;
+ * - gestione della pausa, della fine partita e dell'annullamento;
+ * - riproduzione effetti sonori associati ai pulsanti/errore
  *
  * @param modifier modificatore opzionale applicato al layout principale
  * @param onGameEnd callback invocata per terminare e salvare la partita
@@ -581,7 +589,7 @@ fun GameScreen(
 }
 
 /**
- * Costruisce la matrice dei pulsanti colorati mostrati nella schermata principale.
+ * Costruisce la matrice dei pulsanti colorati mostrati dalla schermata di gioco.
  *
  * La funzione riceve una lista di elementi di tipo [GridButtonData]
  * e li dispone in una griglia composta da tre righe e due colonne.
@@ -593,6 +601,8 @@ fun GameScreen(
  * selezionata dall'utente.
  *
  * @param buttons lista dei pulsanti da mostrare nella griglia
+ * @param inputEnabled indica se i pulsanti possono essere premuti dall'utente
+ * @param activeColor indica il colore del pulsante attivo, se presente
  * @param onButtonClick funzione invocata quando viene premuto un pulsante
  * @param modifier modificatore opzionale applicato al contenitore della matrice
  */
@@ -648,21 +658,17 @@ private fun ButtonsMatrix(
 /**
  * Rappresenta una singola cella interattiva della matrice di gioco.
  *
- * Questa composable visualizza un pulsante colorato contenente un carattere.
- * Al clic, il carattere associato viene inviato alla callback [onClick],
- * consentendo alla schermata principale di aggiornare la sequenza selezionata.
+ * La cella è composta da un pulsante colorato associato ad un carattere:
+ * 'R', 'G', 'B', 'M', 'Y', 'C'.
  *
- * La funzione adatta automaticamente il colore del pulsante al tema di sistema:
- * se il dispositivo è in modalità scura, il colore di sfondo viene reso
- * leggermente più scuro tramite la funzione [darken].
+ * Se la cella è attiva, viene mostrata con una tonalità più chara,
+ * in modo da evidenziare il punsante selzionato o riprodotto dal computer.
  *
- * Inoltre, il rapporto d'aspetto del pulsante viene modificato in base
- * all'altezza disponibile della finestra, così da migliorare la resa
- * dell'interfaccia su schermi piccoli o particolarmente compatti.
- *
- * @param buttonData contiene informazioni sy carattere associato, colore di box e testo
+ * @param buttonData informazioni relative al carattere, al colore di sfondo e al colore del testo.
+ * @param inputEnabled indica se il pulsante è cliccabile o meno.
+ * @param isActive indica se il pulsante deve essere evidenziato
  * @param modifier modificatore applicato al pulsante
- * @param onClick callback eseguita alla pressione del pulsante
+ * @param onClick callback eseguita quando il pulsante viene premuto
  */
 @Composable
 private fun ColorCell(
