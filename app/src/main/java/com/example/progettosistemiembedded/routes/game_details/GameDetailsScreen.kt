@@ -23,6 +23,21 @@ import androidx.constraintlayout.compose.Dimension
 import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.R
 
+/**
+ * Schermata di dettaglio della partita.
+ *
+ * Mostra le informazioni principali relative alla partita:
+ * - identificazione della partita
+ * - lunghezza della sequenza
+ * - indice dell'errore, se presente
+ * - sequenza della partita
+ *
+ * Se la partita èr terminata con un errore, la parte della sequenza a
+ * partire dall'indice errato viene evidenziata con il colore di errore
+ *
+ * @param modifier modificatore opzionale applicato al layout principale
+ * @param game partita da visualizzare
+ */
 @Composable
 fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
@@ -109,32 +124,41 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
                     height = Dimension.fillToConstraints
                 }
         ) {
-                Text(
-                    text = buildAnnotatedString {
-                        gameSequence.forEachIndexed { index, char ->
-                            if (index > 0) {
-                                append(", ")
-                            }
+            /**
+             * Testo della sequenza.
+             *
+             * buildAnnotatedString permette di applicare stili diversi
+             * a parti specifiche del testo.
+             *
+             * Se è presente un errore, tutti gli elementi della sequenza
+             * dall'indice dell'errore in poi vengono colorati
+             */
+            Text(
+                text = buildAnnotatedString {
+                    gameSequence.forEachIndexed { index, char ->
+                        if (index > 0) {
+                            append(", ")
+                        }
 
-                            if (game.errorIndex in 0..index) {
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                ) {
-                                    append(char)
-                                }
-                            } else {
+                        if (game.errorIndex in 0..index) {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            ) {
                                 append(char)
                             }
+                        } else {
+                            append(char)
                         }
-                    },
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(8.dp)
-                )
+                    }
+                },
+                fontSize = 24.sp,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            )
         }
     }
 }
