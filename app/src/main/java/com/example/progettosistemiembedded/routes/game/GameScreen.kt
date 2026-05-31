@@ -517,73 +517,76 @@ fun GameScreen(
                 Alignment.CenterHorizontally
             )
         ) {
-            Button(
-                onClick = {
-                    Log.d(gameTAG, "Start Game pressed")
-                    startNewGame()
-                },
-                enabled = gamePhase == GamePhase.IDLE,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.start_game),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
+            if (gamePhase == GamePhase.IDLE) {
+                Button(
+                    onClick = {
+                        Log.d(gameTAG, "Start Game pressed")
+                        startNewGame()
+                    },
+                    enabled = gamePhase == GamePhase.IDLE,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.start_game),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Button(
+                    onClick = {
+                        if (gamePhase == GamePhase.COMPUTER_PLAYING) {
+                            Log.d(gameTAG, "Game paused")
+                            gamePhase = GamePhase.PAUSED
+                            activeColor = null
+                        } else if (gamePhase == GamePhase.PAUSED) {
+                            Log.d(gameTAG, "Game resumed")
+                            gamePhase = GamePhase.COMPUTER_PLAYING
+                        }
+                    },
+                    enabled = gamePhase == GamePhase.COMPUTER_PLAYING ||
+                            gamePhase == GamePhase.PAUSED,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    )
+                ) {
+                    Text(
+                        text = if (gamePhase == GamePhase.PAUSED)
+                            stringResource(R.string.resume_game)
+                            else stringResource(R.string.pause_game),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        Log.d(gameTAG, "End game pressed")
+
+                        if (gamePhase == GamePhase.GAME_OVER) {
+                            onGameEnd(targetSequence, errorIndex ?: -1)
+                        } else {
+                            finishGameManuallyOrCancel()
+                        }
+                    },
+                    enabled = isGameRunning || gamePhase == GamePhase.GAME_OVER,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.end_game),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
-            Button(
-                onClick = {
-                    if (gamePhase == GamePhase.COMPUTER_PLAYING) {
-                        Log.d(gameTAG, "Game paused")
-                        gamePhase = GamePhase.PAUSED
-                        activeColor = null
-                    } else if (gamePhase == GamePhase.PAUSED) {
-                        Log.d(gameTAG, "Game resumed")
-                        gamePhase = GamePhase.COMPUTER_PLAYING
-                    }
-                },
-                enabled = gamePhase == GamePhase.COMPUTER_PLAYING ||
-                        gamePhase == GamePhase.PAUSED,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            ) {
-                Text(
-                    text = if (gamePhase == GamePhase.PAUSED)
-                        stringResource(R.string.resume_game)
-                        else stringResource(R.string.pause_game),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Button(
-                onClick = {
-                    Log.d(gameTAG, "End game pressed")
-
-                    if (gamePhase == GamePhase.GAME_OVER) {
-                        onGameEnd(targetSequence, errorIndex ?: -1)
-                    } else {
-                        finishGameManuallyOrCancel()
-                    }
-                },
-                enabled = isGameRunning || gamePhase == GamePhase.GAME_OVER,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.end_game),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 }
