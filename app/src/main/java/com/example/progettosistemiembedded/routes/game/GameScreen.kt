@@ -211,24 +211,18 @@ fun GameScreen(
     fun finishGameManuallyOrCancel() {
         /*
          * Fine partita.
-         * Rimuovo l'ultimo carattere della targetSequence perché è il carattere
-         * aggiunto dal computer per il turno successivo/non completato.
-         */
-        val sequenceToSave = targetSequence.dropLast(1)
-
-        /*
-         * Se dopo aver rimosso l'ultimo carattere non rimane nulla,
+         *
+         * Se la targetSequence è vuota,
          * significa che il giocatore non ha completato nessuna sequenza valida.
-         * Quindi annullo la partita senza salvarla.
+         * Procedo con l'annullamento della partita senza salvarla.
          */
-        if (sequenceToSave.isEmpty()) {
+        if (targetSequence.isEmpty() || (targetSequence.size == 1 && playerSequence.isEmpty())) {
             Log.d(gameTAG, "Game canceled, no completed sequence to save")
             resetLocalGame()
             onGameCanceled()
             return
         }
 
-        targetSequence = sequenceToSave
         errorIndex = null
         activeColor = null
         playbackIndex = 0
@@ -236,14 +230,14 @@ fun GameScreen(
 
         Log.d(
             gameTAG,
-            "Game ended manually without error. Saved sequence: $sequenceToSave"
+            "Game ended manually without error. Saved sequence: $targetSequence"
         )
 
         /**
          * Uso -1 come valore convenzionale per dire:
          * partita terminata manualmente, nessun errore.
          */
-        onGameEnd(sequenceToSave, -1)
+        onGameEnd(targetSequence, playerSequence.size)
     }
 
     /**
