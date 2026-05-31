@@ -1,5 +1,6 @@
 package com.example.progettosistemiembedded.routes.game_details
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,8 @@ import com.example.progettosistemiembedded.utils.buildSequenceString
 fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
     val resTAG = "ResultsScreen:ResultsScreen"
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val sequenceScrollState = rememberScrollState()
     
@@ -54,6 +58,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
     ) {
 
         val (titleRef, subtitleRef, sequenceLenRef, errorIndexRef, sequenceCardRef) = createRefs()
+        val middleGuideline = createGuidelineFromStart(0.5f)
 
         Text(
             text = stringResource(R.string.history_title),
@@ -84,11 +89,20 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
             text = stringResource(R.string.sequence_length, gameSequence.size),
             fontSize = 24.sp,
             textAlign = TextAlign.Start,
-            modifier = Modifier.constrainAs(sequenceLenRef) {
-                top.linkTo(subtitleRef.bottom, margin = 32.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-                width = Dimension.fillToConstraints
+            modifier = if (isLandscape) {
+                Modifier.constrainAs(sequenceLenRef) {
+                    top.linkTo(subtitleRef.bottom, margin = 32.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(middleGuideline)
+                    width = Dimension.fillToConstraints
+                }
+            } else {
+                Modifier.constrainAs(sequenceLenRef) {
+                    top.linkTo(subtitleRef.bottom, margin = 32.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                }
             }
         )
 
@@ -97,11 +111,20 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
                 text = stringResource(R.string.failed_at, game.errorIndex),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.constrainAs(errorIndexRef) {
-                    top.linkTo(sequenceLenRef.bottom, margin = 18.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
+                modifier = if (isLandscape) {
+                    Modifier.constrainAs(errorIndexRef) {
+                        top.linkTo(subtitleRef.bottom, margin = 32.dp)
+                        start.linkTo(middleGuideline)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    }
+                } else {
+                    Modifier.constrainAs(errorIndexRef) {
+                        top.linkTo(sequenceLenRef.bottom, margin = 18.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    }
                 }
             )
         }
@@ -110,17 +133,31 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .verticalScroll(sequenceScrollState)
-                .constrainAs(sequenceCardRef) {
-                    top.linkTo(if (game.errorIndex >= 0) errorIndexRef.bottom else sequenceLenRef.bottom, margin = 12.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
-                    width = Dimension.fillToConstraints
-                    height = Dimension.fillToConstraints
-                }
+            modifier = if (isLandscape) {
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .verticalScroll(sequenceScrollState)
+                    .constrainAs(sequenceCardRef) {
+                        top.linkTo(sequenceLenRef.bottom, margin = 12.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }
+            } else {
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .verticalScroll(sequenceScrollState)
+                    .constrainAs(sequenceCardRef) {
+                        top.linkTo(if (game.errorIndex >= 0) errorIndexRef.bottom else sequenceLenRef.bottom, margin = 12.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }
+            }
         ) {
             Text(
                 text = buildSequenceString(
