@@ -34,6 +34,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.DisposableEffect
@@ -407,47 +408,7 @@ fun GameScreen(
             }
         )
 
-        ButtonsMatrix(
-            buttons = buttons,
-            inputEnabled = gamePhase == GamePhase.PLAYER_TURN,
-            activeColor = activeColor,
-            onButtonClick = { char ->
-                if (gamePhase != GamePhase.PLAYER_TURN) {
-                    /* I pulsanti non devono fare nulla, esco dalla lambda */
-                    return@ButtonsMatrix
-                }
-
-                Log.d(gameTAG, "Player pressed $char")
-                soundManager.play(char)
-
-                activeColor = char
-                playerFeedbackTick += 1
-
-                playerSequence = playerSequence + char
-                val currentIndex = playerSequence.lastIndex
-
-                if (char != targetSequence[currentIndex]) {
-                    /* Input errato, partita persa */
-                    errorIndex = currentIndex
-                    gamePhase = GamePhase.GAME_OVER
-                    soundManager.play("error")
-
-                    Log.d(
-                        gameTAG,
-                        "Wrong button. Expected ${targetSequence[currentIndex]}, received $char. Game over."
-                    )
-                } else if (playerSequence.size == targetSequence.size) {
-                    /* Sequenza replicata correttamente */
-                    Log.d(gameTAG, "Sequence completed correctly")
-
-                    /* Aggiungo nuovo carattere alla targetSequence */
-                    targetSequence = targetSequence + buttons.random().char
-                    playbackIndex = 0
-                    activeColor = null
-                    errorIndex = null
-                    gamePhase = GamePhase.WAITING_NEXT_SEQUENCE
-                }
-            },
+        Box(
             modifier = Modifier.constrainAs(matrixRef) {
                 if (isLandscape) {
                     top.linkTo(parent.top)
@@ -465,7 +426,78 @@ fun GameScreen(
                     height = Dimension.fillToConstraints
                 }
             }
-        )
+        ) {
+            ButtonsMatrix(
+                buttons = buttons,
+                inputEnabled = gamePhase == GamePhase.PLAYER_TURN,
+                activeColor = activeColor,
+                onButtonClick = { char ->
+                    if (gamePhase != GamePhase.PLAYER_TURN) {
+                        /* I pulsanti non devono fare nulla, esco dalla lambda */
+                        return@ButtonsMatrix
+                    }
+
+                    Log.d(gameTAG, "Player pressed $char")
+                    soundManager.play(char)
+
+                    activeColor = char
+                    playerFeedbackTick += 1
+
+                    playerSequence = playerSequence + char
+                    val currentIndex = playerSequence.lastIndex
+
+                    if (char != targetSequence[currentIndex]) {
+                        /* Input errato, partita persa */
+                        errorIndex = currentIndex
+                        gamePhase = GamePhase.GAME_OVER
+                        soundManager.play("error")
+
+                        Log.d(
+                            gameTAG,
+                            "Wrong button. Expected ${targetSequence[currentIndex]}, received $char. Game over."
+                        )
+                    } else if (playerSequence.size == targetSequence.size) {
+                        /* Sequenza replicata correttamente */
+                        Log.d(gameTAG, "Sequence completed correctly")
+
+                        /* Aggiungo nuovo carattere alla targetSequence */
+                        targetSequence = targetSequence + buttons.random().char
+                        playbackIndex = 0
+                        activeColor = null
+                        errorIndex = null
+                        gamePhase = GamePhase.WAITING_NEXT_SEQUENCE
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            if (gamePhase == GamePhase.GAME_OVER) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 12.dp
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.game_over),
+                            fontSize = 32.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(
+                                horizontal = 32.dp,
+                                vertical = 24.dp
+                            )
+                        )
+                    }
+                }
+            }
+        }
 
         Card(
             colors = CardDefaults.cardColors(

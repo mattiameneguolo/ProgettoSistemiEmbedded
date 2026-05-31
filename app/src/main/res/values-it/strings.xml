@@ -11,4 +11,5 @@
     <string name="failed_at">Sbagliato all\'indice: %1$d</string>
     <string name="no_game_found">Nessuna partita. Tocca Nuova partita per iniziare!</string>
     <string name="new_game">Nuova Partita</string>
+    <string name="game_over">Hai Perso</string>
 </resources>
