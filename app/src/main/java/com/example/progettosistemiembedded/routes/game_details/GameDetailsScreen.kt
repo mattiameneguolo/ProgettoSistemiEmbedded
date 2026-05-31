@@ -12,9 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +19,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.R
+import com.example.progettosistemiembedded.utils.buildSequenceString
 
 /**
  * Schermata di dettaglio della partita.
@@ -124,35 +122,12 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
                     height = Dimension.fillToConstraints
                 }
         ) {
-            /**
-             * Testo della sequenza.
-             *
-             * buildAnnotatedString permette di applicare stili diversi
-             * a parti specifiche del testo.
-             *
-             * Se è presente un errore, tutti gli elementi della sequenza
-             * dall'indice dell'errore in poi vengono colorati
-             */
             Text(
-                text = buildAnnotatedString {
-                    gameSequence.forEachIndexed { index, char ->
-                        if (index > 0) {
-                            append(", ")
-                        }
-
-                        if (game.errorIndex in 0..index) {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                append(char)
-                            }
-                        } else {
-                            append(char)
-                        }
-                    }
-                },
+                text = buildSequenceString(
+                    sequence = gameSequence,
+                    errorIndex = game.errorIndex,
+                    errorColor = MaterialTheme.colorScheme.error
+                ),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier

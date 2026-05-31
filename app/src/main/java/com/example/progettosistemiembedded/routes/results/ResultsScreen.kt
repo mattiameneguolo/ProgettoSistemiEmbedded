@@ -27,7 +27,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.example.progettosistemiembedded.database.game.Game
 import com.example.progettosistemiembedded.R
-import kotlin.collections.joinToString
+import com.example.progettosistemiembedded.utils.buildSequenceString
 
 /**
  * Composable che mostra la schermata dei risultati delle partite giocate.
@@ -180,8 +180,12 @@ private fun ResultRow(
             )
 
             Text(
-                text = gameSequence.subList(0, gameSequence.size.coerceAtMost(maxSequenceLength))
-                    .joinToString(", ") + (if (gameSequence.size > maxSequenceLength) " ..." else ""),
+                text = buildSequenceString(
+                    sequence = gameSequence,
+                    errorIndex = game.errorIndex,
+                    errorColor = MaterialTheme.colorScheme.error,
+                    maxSequenceLength = maxSequenceLength
+                ),
                 fontSize = 24.sp,
                 textAlign = TextAlign.End,
                 modifier = Modifier
