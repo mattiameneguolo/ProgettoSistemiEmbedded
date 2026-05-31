@@ -9,7 +9,7 @@
     <string name="resume_game">Resume</string>
     <string name="result_of_game">Result of game %1$d:</string>
     <string name="sequence_length">Sequence length: %1$d</string>
-    <string name="failed_at">Failed at index: %1$d</string>
+    <string name="failed_at">Failed at turn: %1$d</string>
     <string name="no_game_found">No games. Tap New Game to start!</string>
     <string name="new_game">New Game</string>
     <string name="game_over">You Lose</string>

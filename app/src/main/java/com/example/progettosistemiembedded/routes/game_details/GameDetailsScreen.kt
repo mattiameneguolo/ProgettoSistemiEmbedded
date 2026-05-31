@@ -108,7 +108,7 @@ fun GameDetailsScreen(modifier: Modifier = Modifier, game: Game) {
 
         if (game.errorIndex >= 0) {
             Text(
-                text = stringResource(R.string.failed_at, game.errorIndex),
+                text = stringResource(R.string.failed_at, game.errorIndex + 1),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Start,
                 modifier = if (isLandscape) {
